@@ -7,12 +7,23 @@ import { Button } from '@/components/ui/button'
 import { createEvent, updateSettings } from '../../lib/actions'
 
 export default function AdminPage() {
+  const [password, setPassword] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [eventName, setEventName] = useState('')
   const [eventSlots, setEventSlots] = useState('')
   const [maxUsers, setMaxUsers] = useState('')
   const [choiceTime, setChoiceTime] = useState('')
 
-  const handleCreateEvent = async (e: { preventDefault: () => void }) => {
+  const handlePasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (password === 'admin') {
+      setIsAuthenticated(true)
+    } else {
+      alert('Senha incorreta. Tente novamente.')
+    }
+  }
+
+  const handleCreateEvent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       await createEvent({ name: eventName, slots: parseInt(eventSlots) })
@@ -23,14 +34,36 @@ export default function AdminPage() {
     }
   }
 
-  const handleUpdateSettings = async (e: { preventDefault: () => void }) => {
+  const handleUpdateSettings = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       await updateSettings({ maxUsers: parseInt(maxUsers), choiceTime: parseInt(choiceTime) })
-      // Optionally, show a success message
     } catch (error) {
       console.error('Erro ao atualizar configurações:', error)
     }
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Autenticação de Administrador</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <Input
+                type="password"
+                placeholder="Digite a senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button type="submit" className="w-full">Entrar</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
