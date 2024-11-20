@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { setCookie } from "cookies-next"
+import { TOKEN } from '@/constants/token.constant'
 
 export default function AdminPage() {
   const [password, setPassword] = useState('')
@@ -19,6 +21,7 @@ export default function AdminPage() {
     if (password === 'admin') {
       setIsAuthenticated(true)
       setError(null)
+      setCookie('token', TOKEN)
     } else {
       setError('Senha incorreta. Tente novamente.')
     }
