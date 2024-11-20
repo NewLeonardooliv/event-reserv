@@ -13,7 +13,7 @@ interface UsersListProps {
 
 export default function UsersList({ onlineUsers, waitingList }: UsersListProps) {
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm border-none">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Usuários</CardTitle>
       </CardHeader>
