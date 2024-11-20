@@ -1,6 +1,8 @@
 "use server";
 
+import { EVENTS } from "@/constants/events.constants";
 import { revalidatePath } from "next/cache";
+import { delay } from "./utils";
 
 export async function reserveEvent(eventId: string): Promise<void> {
   console.log(`Reserva para o evento ${eventId} criada`);
@@ -26,10 +28,12 @@ const currentSettings: SystemSettings = {
   autoConfirmReservations: false,
 };
 
-export async function createEvent(eventData: EventData): Promise<void> {
-  console.log(`Evento ${eventData.name} criado com ${eventData.slots} vagas`);
-  revalidatePath("/");
-  revalidatePath("/admin");
+export async function createEvent({ name, slots }: EventData): Promise<void> {
+  await delay(500);
+  const event = { id: String(EVENTS.length + 1), name, availableSlots: slots };
+  console.log(event);
+  EVENTS.push(event);
+  console.log(EVENTS);
 }
 
 interface Settings {

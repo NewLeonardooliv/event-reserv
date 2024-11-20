@@ -1,21 +1,12 @@
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { EVENTS } from "@/constants/events.constants";
+import { Event } from "@/model/event";
+import { delay } from "./utils";
 
-export interface Event {
-  id: string;
-  name: string;
-  availableSlots: number;
-}
 
 export interface User {
   id: string;
   name: string;
 }
-
-const events: Event[] = [
-  { id: "1", name: "Conferência de Tecnologia", availableSlots: 100 },
-  { id: "2", name: "Workshop de Design", availableSlots: 50 },
-  { id: "3", name: "Hackathon de IA", availableSlots: 200 },
-];
 
 const onlineUsers: User[] = [
   { id: "1", name: "Alice" },
@@ -30,7 +21,8 @@ const waitingList: User[] = [
 
 export async function getEvents(): Promise<Event[]> {
   await delay(500);
-  return events;
+
+  return EVENTS;
 }
 
 export async function getOnlineUsers(): Promise<User[]> {

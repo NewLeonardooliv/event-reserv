@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { reserveEvent } from '../lib/actions'
-import type { Event } from '../lib/data'
 import { acquireSemaphore, releaseSemaphore } from '../config/semaphore'
+import { Event } from '@/model/event'
 
 interface EventCardProps {
   event: Event;

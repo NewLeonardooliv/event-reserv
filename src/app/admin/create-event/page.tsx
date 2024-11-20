@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { createEvent } from '@/lib/actions'
+import { createEvent } from '@/http/createEvents'
 
 export default function CriarNovoEvento() {
   const [eventName, setEventName] = useState('')
@@ -31,9 +31,10 @@ export default function CriarNovoEvento() {
     try {
       await createEvent({
         name: eventName,
-        slots: parseInt(eventSlots, 10)
+        availableSlots: parseInt(eventSlots, 10)
       })
-      router.push('/eventos')
+
+      router.push('/admin')
     } catch (error) {
       setError('Ocorreu um erro ao criar o evento. Por favor, tente novamente.')
       console.error('Erro ao criar evento:', error)
@@ -44,13 +45,13 @@ export default function CriarNovoEvento() {
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Criar Novo Evento</CardTitle>
-          <CardDescription>Preencha os detalhes do novo evento abaixo.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Criar Novo Evento</CardTitle>
+            <CardDescription>Preencha os detalhes do novo evento abaixo.</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-2">
               <Label htmlFor="eventName">Nome do Evento</Label>
               <Input
@@ -80,15 +81,15 @@ export default function CriarNovoEvento() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.back()}>Cancelar</Button>
-          <Button type="submit" disabled={isLoading} onClick={() => handleSubmit}>
-            {isLoading ? 'Criando...' : 'Criar Evento'}
-          </Button>
-        </CardFooter>
-      </Card>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={() => router.back()}>Cancelar</Button>
+            <Button type="submit" disabled={isLoading}>
+              Criar Evento
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
     </div>
   )
 }

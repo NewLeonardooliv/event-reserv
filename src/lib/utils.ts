@@ -12,3 +12,6 @@ export function getUrl(path?: string) {
 
   return `${baseUrl}${normalizedPath}`;
 }
+
+
+export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
