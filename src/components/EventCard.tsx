@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button'
 import { reserveEvent } from '../lib/actions'
 import type { Event } from '../lib/data'
+import { acquireSemaphore, releaseSemaphore } from '../config/semaphore'
 
 interface EventCardProps {
   event: Event;
@@ -26,17 +27,21 @@ export default function EventCard({ event }: EventCardProps) {
           setIsReserving(false);
           setReservationTimer(null);
           setTimeLeft(null);
+          handleRelease();
         }
       }, 1000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isReserving, reservationTimer]);
+  }, [isReserving, reservationTimer]);  
 
   const handleReserve = async () => {
+    await acquireSemaphore()
+
     setIsReserving(true)
-    const expirationTime = Date.now() + 120000; // 2 minutes from now
+
+    const expirationTime = Date.now() + 5000; // 2 minutes from now
     setReservationTimer(expirationTime)
 
     try {
@@ -47,8 +52,16 @@ export default function EventCard({ event }: EventCardProps) {
       setIsReserving(false)
       setReservationTimer(null)
       setTimeLeft(null)
+      handleRelease()
     }
   }
+
+  const handleRelease = () => {
+    releaseSemaphore()
+    setIsReserving(false)
+    setReservationTimer(null)
+    setTimeLeft(null)
+  };
 
   return (
     <Card>
