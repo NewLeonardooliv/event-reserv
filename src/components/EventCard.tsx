@@ -114,7 +114,7 @@ export default function EventCard({ event }: EventCardProps) {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>
+            <AlertDialogCancel onClick={handleRelease}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmReservation}>
