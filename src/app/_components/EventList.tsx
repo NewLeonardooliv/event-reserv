@@ -11,10 +11,10 @@ export const EventList = ({ initialEvents }: { initialEvents: Event[] }) => {
 
     useEffect(() => {
         if (socket) {
-            socket.on('receive-event', (newEvent: Event) => {
-                console.log(newEvent);
+            socket.on('receive-event', (newEvent) => {
+                const jsonData = JSON.parse(newEvent);
 
-                setEventsList((prevEvents) => [...prevEvents, newEvent])
+                setEventsList((prevEvents) => [...prevEvents, jsonData])
             })
 
             return () => {
