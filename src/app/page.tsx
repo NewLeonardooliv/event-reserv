@@ -1,17 +1,11 @@
-import { getEvents, getOnlineUsers, getWaitingList } from '@/lib/data';
+import { getEvents } from '@/lib/data';
 import UsersList from '../components/UsersList'
 import { Event } from '@/model/event';
 import { EventList } from './_components/EventList';
 
-interface User {
-  id: string;
-  name: string;
-}
 
 export default async function Home() {
   const events: Event[] = await getEvents()
-  const onlineUsers: User[] = await getOnlineUsers()
-  const waitingList: User[] = await getWaitingList()
 
   return (
     <div className="flex min-h-screen">
@@ -21,7 +15,7 @@ export default async function Home() {
           <EventList initialEvents={events} />
         </div>
       </main>
-      <UsersList initialOnlineUsers={onlineUsers} initialWaitingList={waitingList} />
+      <UsersList />
     </div>
   )
 }

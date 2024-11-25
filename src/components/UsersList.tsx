@@ -8,14 +8,9 @@ import { Button } from '@/components/ui/button';
 import { User } from '@/lib/data';
 import { useSocket } from '@/hooks/useSocket';
 
-interface UsersListProps {
-  initialOnlineUsers: User[];
-  initialWaitingList: User[];
-}
-
-export default function UsersList({ initialOnlineUsers, initialWaitingList }: UsersListProps) {
-  const [onlineUsers, setOnlineUsers] = useState<User[]>(initialOnlineUsers);
-  const [waitingList, setWaitingList] = useState<User[]>(initialWaitingList);
+export default function UsersList() {
+  const [onlineUsers, setOnlineUsers] = useState<User[]>();
+  const [waitingList, setWaitingList] = useState<User[]>();
   const [userPosition, setUserPosition] = useState<number | null>(null);
   const [isInQueue, setIsInQueue] = useState(false);
   const socket = useSocket();
@@ -66,7 +61,7 @@ export default function UsersList({ initialOnlineUsers, initialWaitingList }: Us
     <Card className="h-[calc(100vh-4rem)] w-full max-w-sm border-none flex flex-col">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">
-          Usuários Online <Badge variant="secondary" className="ml-2">{onlineUsers.length}</Badge>
+          Usuários Online <Badge variant="secondary" className="ml-2">{onlineUsers?.length || 0}</Badge>
         </CardTitle>
       </CardHeader>
 
@@ -74,7 +69,7 @@ export default function UsersList({ initialOnlineUsers, initialWaitingList }: Us
         <h3 className="text-lg font-semibold mb-2">Fila de Espera</h3>
         <ScrollArea className="flex-1 rounded-md border p-4">
           <ul className="space-y-2">
-            {waitingList.map((user, index) => (
+            {waitingList?.map((user, index) => (
               <li key={user.id} className="flex items-center space-x-2">
                 <Badge variant="outline">{index + 1}</Badge>
                 <span>{user.name}</span>
