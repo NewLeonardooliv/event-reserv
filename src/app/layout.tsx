@@ -16,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "EventMe",
+  title: "EventFy",
   description: "Register for an event",
 };
 

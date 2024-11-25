@@ -1,40 +1,56 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { createEvent } from '@/http/createEvents'
+import { useSocket } from '@/hooks/useSocket'
+
+interface EventFormData {
+  eventName: string
+  eventSlots: number
+}
 
 export default function CriarNovoEvento() {
-  const [eventName, setEventName] = useState('')
-  const [eventSlots, setEventSlots] = useState('')
+  const { register, handleSubmit, formState: { errors } } = useForm<EventFormData>()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
+  const socket = useSocket()
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  useEffect(() => {
+    if (socket) {
+      socket.on('receive-event', (message: string) => {
+        console.log('Recebido do servidor:', message)
+      })
+    }
+  }, [socket])
+
+  const onSubmit = async (data: EventFormData) => {
     setIsLoading(true)
     setError(null)
-
-    if (!eventName || !eventSlots) {
-      setError('Por favor, preencha todos os campos.')
-      setIsLoading(false)
-      return
-    }
+    setSuccess(false)
 
     try {
-      await createEvent({
-        name: eventName,
-        availableSlots: parseInt(eventSlots, 10)
+      const newEvent = await createEvent({
+        id: Math.random().toString(36).substring(2, 9),
+        name: data.eventName,
+        availableSlots: data.eventSlots
       })
 
-      router.push('/admin')
+      if (socket) {
+        socket.emit('create-event', JSON.stringify(newEvent))
+      }
+
+      setSuccess(true)
+      setTimeout(() => router.push('/admin'), 2000)
     } catch (error) {
       setError('Ocorreu um erro ao criar o evento. Por favor, tente novamente.')
       console.error('Erro ao criar evento:', error)
@@ -45,7 +61,7 @@ export default function CriarNovoEvento() {
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">Criar Novo Evento</CardTitle>
@@ -57,10 +73,11 @@ export default function CriarNovoEvento() {
               <Input
                 id="eventName"
                 placeholder="Digite o nome do evento"
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
-                required
+                {...register("eventName", { required: "Nome do evento é obrigatório" })}
               />
+              {errors.eventName && (
+                <p className="text-red-500 text-sm">{errors.eventName.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="eventSlots">Número de Vagas</Label>
@@ -68,11 +85,14 @@ export default function CriarNovoEvento() {
                 id="eventSlots"
                 type="number"
                 placeholder="Digite o número de vagas"
-                value={eventSlots}
-                onChange={(e) => setEventSlots(e.target.value)}
-                required
-                min="1"
+                {...register("eventSlots", { 
+                  required: "Número de vagas é obrigatório",
+                  min: { value: 1, message: "O número de vagas deve ser pelo menos 1" }
+                })}
               />
+              {errors.eventSlots && (
+                <p className="text-red-500 text-sm">{errors.eventSlots.message}</p>
+              )}
             </div>
             {error && (
               <Alert variant="destructive">
@@ -81,11 +101,18 @@ export default function CriarNovoEvento() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+            {success && (
+              <Alert variant="default" className="bg-green-100 border-green-400">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertTitle>Sucesso</AlertTitle>
+                <AlertDescription>Evento criado com sucesso! Redirecionando...</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => router.back()}>Cancelar</Button>
+            <Button variant="outline" onClick={() => router.back()} type="button">Cancelar</Button>
             <Button type="submit" disabled={isLoading}>
-              Criar Evento
+              {isLoading ? 'Criando...' : 'Criar Evento'}
             </Button>
           </CardFooter>
         </Card>
