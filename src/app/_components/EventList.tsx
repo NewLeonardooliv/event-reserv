@@ -10,17 +10,28 @@ export const EventList = ({ initialEvents }: { initialEvents: Event[] }) => {
     const socket = useSocket()
 
     useEffect(() => {
-        if (socket) {
-            socket.on('receive-event', (newEvent) => {
-                const jsonData = JSON.parse(newEvent);
+        if (!socket) return;
 
-                setEventsList((prevEvents) => [...prevEvents, jsonData])
-            })
+        socket.on('receive-event', (newEvent) => {
+            const jsonData = JSON.parse(newEvent);
 
-            return () => {
-                socket.off('receive-event')
-            }
-        }
+             setEventsList((prevEvents) => [...prevEvents, jsonData])
+        })
+
+        socket.on('receive-event-att', (updatedEvent: { eventId: string; availableSlots: number }) => {        
+            setEventsList((prevEvents) =>
+                prevEvents.map((event) =>
+                    event.id === updatedEvent.eventId
+                        ? { ...event, availableSlots: updatedEvent.availableSlots }
+                        : event
+                )
+            );
+        })
+
+        return () => {
+            socket.off('receive-event')
+            socket.off('receive-event-att')
+        }        
     }, [socket])
 
     return (

@@ -53,6 +53,24 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("patch-event", (data) => {
+    try {
+      console.log("Evento atualizado:", data);
+
+      io.emit("receive-event-att", {
+        ...data,
+        createdAt: new Date(),
+        createdBy: socket.id,
+      });
+    } catch (error) {
+      console.error("Erro ao processar evento:", error);
+      socket.emit("error", {
+        message: "Erro ao atualizar evento",
+        details: error.message,
+      });
+    }
+  });
+
   socket.on("joinQueue", (userData) => {
     try {
       const userIndex = waitingList.findIndex((user) => user.id === socket.id);

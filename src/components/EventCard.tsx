@@ -1,11 +1,12 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { reserveEvent } from '../lib/actions'
-import { acquireSemaphore, releaseSemaphore } from '../config/semaphore'
-import { Event } from '@/model/event'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { acquireSemaphore, releaseSemaphore } from '../config/semaphore';
+import { Event } from '@/model/event';
+import { patchEvent } from '@/http/patchEvents';
+import { useSocket } from '@/hooks/useSocket';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,16 +16,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 interface EventCardProps {
-  event: Event; 
+  event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
-  const [reservationTimer, setReservationTimer] = useState<number | null>(null)
-  const [timeLeft, setTimeLeft] = useState<number | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [reservationTimer, setReservationTimer] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const socket = useSocket();
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -36,39 +38,66 @@ export default function EventCard({ event }: EventCardProps) {
         if (remaining <= 0) {
           setReservationTimer(null);
           setTimeLeft(null);
-          handleRelease();
+          handleCancelReservation(); 
         }
-      }, 0);
+      }, 1000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [reservationTimer]);  
+  }, [reservationTimer]);
 
   const handleReserve = async () => {
-    const expirationTime = Date.now() + 121000 // 2 minutes from now
-    setReservationTimer(expirationTime)
-    await acquireSemaphore() 
-    setIsDialogOpen(true)  
+    const expirationTime = Date.now() + 120000; // 2 minutes from now
+    setReservationTimer(expirationTime);
+
+    try {
+      await acquireSemaphore();
+      await patchEvent(event.id, -1);
+
+      if (socket) {
+        socket.emit('patch-event', {
+          eventId: event.id,
+          availableSlots: event.availableSlots - 1,
+        });
+      }
+
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error('Erro ao reservar vaga temporária:', error);
+      setReservationTimer(null);
+    }
   };
 
   const confirmReservation = async () => {
-    setIsDialogOpen(false)        
-    setReservationTimer(null)      
-    handleRelease()
+    setIsDialogOpen(false);
+    setReservationTimer(null);
+    handleRelease();
+  };
+
+  const handleCancelReservation = async () => {
+    setIsDialogOpen(false);
+    handleRelease();
+
     try {
-      await reserveEvent(event.id)      
+      await patchEvent(event.id, 1);
+
+      if (socket) {
+        socket.emit('patch-event', {
+          eventId: event.id,
+          availableSlots: event.availableSlots + 1,
+        });
+      }
+
+      console.log('Reserva cancelada e vaga devolvida.');
     } catch (error) {
-      console.error('Erro ao reservar:', error)
-      setReservationTimer(null)
-      setTimeLeft(null)      
+      console.error('Erro ao devolver vaga:', error);
     }
-  }
+  };
 
   const handleRelease = async () => {
-    await releaseSemaphore()
-    setReservationTimer(null)
-    setIsDialogOpen(false)
+    await releaseSemaphore();
+    setReservationTimer(null);
   };
 
   return (
@@ -114,7 +143,7 @@ export default function EventCard({ event }: EventCardProps) {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleRelease}>
+            <AlertDialogCancel onClick={handleCancelReservation}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmReservation}>
