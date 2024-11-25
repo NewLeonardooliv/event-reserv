@@ -1,6 +1,7 @@
 import { EVENTS } from "@/constants/events.constants";
 import { Event } from "@/model/event";
 import { delay } from "./utils";
+import { USERS } from "@/constants/users.constants";
 
 
 export interface User {
@@ -14,10 +15,6 @@ const onlineUsers: User[] = [
   { id: "3", name: "Charlie" },
 ];
 
-const waitingList: User[] = [
-  { id: "4", name: "David" },
-  { id: "5", name: "Eve" },
-];
 
 export async function getEvents(): Promise<Event[]> {
   await delay(500);
@@ -32,5 +29,6 @@ export async function getOnlineUsers(): Promise<User[]> {
 
 export async function getWaitingList(): Promise<User[]> {
   await delay(300);
-  return waitingList;
+
+  return USERS;
 }

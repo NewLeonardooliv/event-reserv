@@ -21,7 +21,7 @@ export default async function Home() {
           <EventList initialEvents={events} />
         </div>
       </main>
-      <UsersList onlineUsers={onlineUsers} waitingList={waitingList} />
+      <UsersList initialOnlineUsers={onlineUsers} initialWaitingList={waitingList} />
     </div>
   )
 }
