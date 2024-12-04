@@ -42,7 +42,7 @@ const AlertDialogContent = React.forwardRef<
       {...props}
     >
       {timer && (
-        <div className="absolute top-2 right-2 text-sm font-medium bg-gray-200 px-2 py-1 rounded shadow">
+        <div className="absolute top-2 right-2 text-sm font-medium bg-foreground/10 px-2 py-1 rounded shadow">
           {timer}
         </div>
       )}
