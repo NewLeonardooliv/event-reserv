@@ -46,7 +46,7 @@ export default function CriarNovoEvento() {
       })
 
       if (socket) {
-        socket.emit('create-event', JSON.stringify(newEvent))
+        socket.emit('create-event', newEvent)
       }
 
       setSuccess(true)

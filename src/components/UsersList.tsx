@@ -34,6 +34,8 @@ export default function UsersList() {
       socket.on('updateOnlineUsers', updateOnlineUsers);
 
       socket.emit('getInitialData');
+      socket.emit('connectClient');
+
 
       return () => {
         socket.off('updateWaitingList', updateWaitingList);

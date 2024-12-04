@@ -13,9 +13,7 @@ export const EventList = ({ initialEvents }: { initialEvents: Event[] }) => {
         if (!socket) return;
 
         socket.on('receive-event', (newEvent) => {
-            const jsonData = JSON.parse(newEvent);
-
-             setEventsList((prevEvents) => [...prevEvents, jsonData])
+             setEventsList((prevEvents) => [...prevEvents, newEvent as Event])
         })
 
         socket.on('receive-event-att', (updatedEvent: { eventId: string; availableSlots: number }) => {        

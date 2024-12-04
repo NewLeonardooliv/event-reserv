@@ -58,7 +58,7 @@ export default function EventCard({ event }: EventCardProps) {
       if (socket) {
         socket.emit('patch-event', {
           eventId: event.id,
-          availableSlots: event.availableSlots - 1,
+          availableSlots: Number(event.availableSlots) - 1,
         });
       }
 
@@ -85,7 +85,7 @@ export default function EventCard({ event }: EventCardProps) {
       if (socket) {
         socket.emit('patch-event', {
           eventId: event.id,
-          availableSlots: event.availableSlots + 1,
+          availableSlots: Number(event.availableSlots) + 1,
         });
       }
 

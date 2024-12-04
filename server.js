@@ -25,14 +25,16 @@ let waitingList = [];
 io.on("connection", (socket) => {
   console.log("Cliente conectado:", socket.id);
 
-  const newUser = { id: socket.id, name: `User ${socket.id.substr(0, 4)}` };
-  onlineUsers.push(newUser);
-
-  io.emit("updateOnlineUsers", onlineUsers);
-
   socket.on("getInitialData", () => {
     socket.emit("updateOnlineUsers", onlineUsers);
     socket.emit("updateWaitingList", waitingList);
+  });
+
+  socket.on("connectClient", () => {
+    const newUser = { id: socket.id, name: `User ${socket.id}` };
+    onlineUsers.push(newUser);
+  
+    io.emit("updateOnlineUsers", onlineUsers);
   });
 
   socket.on("create-event", (data) => {
