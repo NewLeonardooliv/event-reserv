@@ -58,7 +58,7 @@ export default function UsersList() {
   };
 
   return (
-    <Card className="h-[calc(100vh-4rem)] w-full max-w-sm border-none flex flex-col">
+    <Card className="h-[calc(100vh-5rem)] w-full max-w-sm border-none flex flex-col">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">
           Usuários Online <Badge variant="secondary" className="ml-2">{onlineUsers?.length || 0}</Badge>

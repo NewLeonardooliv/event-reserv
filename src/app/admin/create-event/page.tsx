@@ -102,7 +102,7 @@ export default function CriarNovoEvento() {
               </Alert>
             )}
             {success && (
-              <Alert variant="default" className="bg-green-100 border-green-400">
+              <Alert variant="default" className="bg-green-100 border-green-400 dark:bg-green-800 dark:border-green-600">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <AlertTitle>Sucesso</AlertTitle>
                 <AlertDescription>Evento criado com sucesso! Redirecionando...</AlertDescription>
