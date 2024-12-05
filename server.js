@@ -19,113 +19,89 @@ const io = new Server(server, {
 
 const PORT = 3002;
 
-let onlineUsers = [];
-let waitingList = [];
+let users = [];
+let activeUsers = [];
+const MAX_ACTIVE_USERS = 1;
+const INTERACTION_TIMEOUT = 30000; // 30 seconds
+
+function moveToEndOfQueue(userId) {
+  const userIndex = activeUsers.indexOf(userId);
+  if (userIndex !== -1) {
+    activeUsers.splice(userIndex, 1);
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      users = users.filter(u => u.id !== userId);
+      users.push(user);
+    }
+    checkAndActivateNextUser();
+  }
+}
+
+function checkAndActivateNextUser() {
+  while (activeUsers.length < MAX_ACTIVE_USERS && users.length > activeUsers.length) {
+    const nextUserId = users.find(user => !activeUsers.includes(user.id))?.id;
+    if (nextUserId) {
+      activeUsers.push(nextUserId);
+      io.to(nextUserId).emit('activateUser', { timeLimit: INTERACTION_TIMEOUT });
+      
+      setTimeout(() => moveToEndOfQueue(nextUserId), INTERACTION_TIMEOUT);
+    }
+  }
+  io.emit("updateActiveUsers", activeUsers);
+  io.emit("updateUsers", users);
+}
 
 io.on("connection", (socket) => {
   console.log("Cliente conectado:", socket.id);
 
   socket.on("getInitialData", () => {
-    socket.emit("updateOnlineUsers", onlineUsers);
-    socket.emit("updateWaitingList", waitingList);
-  });
-
-  socket.on("connectClient", () => {
-    const newUser = { id: socket.id, name: `User ${socket.id}` };
-    onlineUsers.push(newUser);
-  
-    io.emit("updateOnlineUsers", onlineUsers);
-  });
-
-  socket.on("create-event", (data) => {
-    try {
-      console.log("Novo evento criado:", data);
-
-      io.emit("receive-event", {
-        ...data,
-        createdAt: new Date(),
-        createdBy: socket.id,
-      });
-    } catch (error) {
-      console.error("Erro ao processar evento:", error);
-      socket.emit("error", {
-        message: "Erro ao criar evento",
-        details: error.message,
-      });
-    }
-  });
-
-  socket.on("patch-event", (data) => {
-    try {
-      console.log("Evento atualizado:", data);
-
-      io.emit("receive-event-att", {
-        ...data,
-        createdAt: new Date(),
-        createdBy: socket.id,
-      });
-    } catch (error) {
-      console.error("Erro ao processar evento:", error);
-      socket.emit("error", {
-        message: "Erro ao atualizar evento",
-        details: error.message,
-      });
-    }
+    socket.emit("updateUsers", users);
+    socket.emit("updateActiveUsers", activeUsers);
   });
 
   socket.on("joinQueue", (userData) => {
-    try {
-      const userIndex = waitingList.findIndex((user) => user.id === socket.id);
-
-      if (userIndex === -1) {
-        const user = {
-          id: socket.id,
-          name: userData.name || `User ${socket.id.substr(0, 4)}`,
-        };
-        waitingList.push(user);
-
-        io.emit("updateWaitingList", waitingList);
-      }
-    } catch (error) {
-      console.error("Erro ao entrar na fila:", error);
-      socket.emit("error", {
-        message: "Erro ao entrar na fila",
-        details: error.message,
-      });
-    }
+    const newUser = { 
+      id: socket.id, 
+      name: userData.name || `User ${socket.id.substr(0, 4)}` 
+    };
+    users.push(newUser);
+    io.emit("updateUsers", users);
+    checkAndActivateNextUser();
   });
 
   socket.on("leaveQueue", () => {
-    try {
-      waitingList = waitingList.filter((user) => user.id !== socket.id);
-
-      io.emit("updateWaitingList", waitingList);
-    } catch (error) {
-      console.error("Erro ao sair da fila:", error);
-      socket.emit("error", {
-        message: "Erro ao sair da fila",
-        details: error.message,
-      });
+    users = users.filter(user => user.id !== socket.id);
+    const activeIndex = activeUsers.indexOf(socket.id);
+    if (activeIndex !== -1) {
+      activeUsers.splice(activeIndex, 1);
     }
+    io.emit("updateUsers", users);
+    io.emit("updateActiveUsers", activeUsers);
+    checkAndActivateNextUser();
+  });
+
+  socket.on("finishInteraction", () => {
+    moveToEndOfQueue(socket.id);
   });
 
   socket.on("disconnect", () => {
     console.log("Cliente desconectado:", socket.id);
-
-    onlineUsers = onlineUsers.filter((user) => user.id !== socket.id);
-
-    waitingList = waitingList.filter((user) => user.id !== socket.id);
-
-    io.emit("updateOnlineUsers", onlineUsers);
-    io.emit("updateWaitingList", waitingList);
+    users = users.filter(user => user.id !== socket.id);
+    const activeIndex = activeUsers.indexOf(socket.id);
+    if (activeIndex !== -1) {
+      activeUsers.splice(activeIndex, 1);
+    }
+    io.emit("updateUsers", users);
+    io.emit("updateActiveUsers", activeUsers);
+    checkAndActivateNextUser();
   });
 });
 
 app.get("/", (req, res) => {
   res.json({
     status: "ok",
-    onlineUsers: onlineUsers.length,
-    waitingList: waitingList.length,
+    users: users.length,
+    activeUsers: activeUsers.length,
   });
 });
 

@@ -7,54 +7,67 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { User } from '@/lib/data';
 import { useSocket } from '@/hooks/useSocket';
+import { Zap } from 'lucide-react';
 
 export default function UsersList() {
-  const [onlineUsers, setOnlineUsers] = useState<User[]>();
-  const [waitingList, setWaitingList] = useState<User[]>();
+  const [users, setUsers] = useState<User[]>([]);
+  const [activeUsers, setActiveUsers] = useState<string[]>([]);
   const [userPosition, setUserPosition] = useState<number | null>(null);
-  const [isInQueue, setIsInQueue] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const socket = useSocket();
 
   useEffect(() => {
     if (socket) {
-      const updateWaitingList = (updatedList: User[]) => {
-        setWaitingList(updatedList);
+      socket.on('updateUsers', (updatedUsers: User[]) => {
+        setUsers(updatedUsers);
         if (socket.id) {
-          const position = updatedList.findIndex(user => user.id === socket.id);
+          const position = updatedUsers.findIndex(user => user.id === socket.id && !activeUsers.includes(user.id));
           setUserPosition(position !== -1 ? position + 1 : null);
-          setIsInQueue(position !== -1);
         }
-      };
+      });
 
-      const updateOnlineUsers = (updatedList: User[]) => {
-        setOnlineUsers(updatedList);
-      };
+      socket.on('updateActiveUsers', (updatedActiveUsers: string[]) => {
+        setActiveUsers(updatedActiveUsers);
+      });
 
-      socket.on('updateWaitingList', updateWaitingList);
-      socket.on('updateOnlineUsers', updateOnlineUsers);
+      socket.on('activateUser', ({ timeLimit }) => {
+        setIsActive(true);
+        setTimeLeft(timeLimit / 1000);
+      });
 
       socket.emit('getInitialData');
-      socket.emit('connectClient');
-
 
       return () => {
-        socket.off('updateWaitingList', updateWaitingList);
-        socket.off('updateOnlineUsers', updateOnlineUsers);
+        socket.off('updateUsers');
+        socket.off('updateActiveUsers');
+        socket.off('activateUser');
       };
     }
-  }, [socket]);
+  }, [socket, activeUsers]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isActive && timeLeft !== null && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev !== null ? prev - 1 : null);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsActive(false);
+      socket?.emit('finishInteraction');
+    }
+    return () => clearInterval(timer);
+  }, [isActive, timeLeft, socket]);
 
   const handleJoinQueue = () => {
     if (socket && socket.id) {
       socket.emit('joinQueue', { name: `User ${socket.id.substr(0, 4)}` });
-      setIsInQueue(true);
     }
   };
 
   const handleLeaveQueue = () => {
     if (socket && socket.id) {
       socket.emit('leaveQueue');
-      setIsInQueue(false);
       setUserPosition(null);
     }
   };
@@ -63,16 +76,17 @@ export default function UsersList() {
     <Card className="h-[calc(100vh-5rem)] w-full max-w-sm border-none flex flex-col">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">
-          Usuários Online <Badge variant="secondary" className="ml-2">{onlineUsers?.length || 0}</Badge>
+          Usuários Online <Badge variant="secondary" className="ml-2">{users.length}</Badge>
         </CardTitle>
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col">
-        <h3 className="text-lg font-semibold mb-2">Fila de Espera</h3>
+        <h3 className="text-lg font-semibold mb-2">Usuários</h3>
         <ScrollArea className="flex-1 rounded-md border p-4">
           <ul className="space-y-2">
-            {waitingList?.map((user, index) => (
+            {users.map((user, index) => (
               <li key={user.id} className="flex items-center space-x-2">
+                {activeUsers.includes(user.id) && <Zap className="h-4 w-4 text-yellow-500" />}
                 <Badge variant="outline">{index + 1}</Badge>
                 <span>{user.name}</span>
                 {socket && socket.id === user.id && (
@@ -84,10 +98,14 @@ export default function UsersList() {
         </ScrollArea>
       </CardContent>
 
-      <CardFooter className="p-4">
-        {isInQueue ? (
+      <CardFooter className="p-4 flex flex-col items-center">
+        {isActive ? (
+          <div className="text-center mb-2">
+            <p>Tempo restante: {timeLeft} segundos</p>
+          </div>
+        ) : userPosition ? (
           <Button 
-            className="w-full" 
+            className="w-full mb-2" 
             onClick={handleLeaveQueue}
             variant="destructive"
           >
@@ -95,7 +113,7 @@ export default function UsersList() {
           </Button>
         ) : (
           <Button 
-            className="w-full" 
+            className="w-full mb-2" 
             onClick={handleJoinQueue}
           >
             Entrar na Fila
