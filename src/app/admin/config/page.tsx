@@ -13,16 +13,12 @@ import { updateSettings, getSettings } from '@/lib/actions'
 interface SystemSettings {
     maxUsers: number;
     choiceTime: number;
-    allowWaitlist: boolean;
-    autoConfirmReservations: boolean;
 }
 
 export default function ConfiguracoesDoSistema() {
     const [settings, setSettings] = useState<SystemSettings>({
         maxUsers: 10,
         choiceTime: 120,
-        allowWaitlist: true,
-        autoConfirmReservations: false,
     })
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
