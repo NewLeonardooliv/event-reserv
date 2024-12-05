@@ -6,7 +6,7 @@ export async function PATCH(request: Request, { params }: { params: { eventId: s
   const release = await acquireLock();
 
   try {
-    const { eventId } = params;
+    const { eventId } = await params;
     const { change } = await request.json();
 
     const event = EVENTS.find((event) => event.id === eventId);
