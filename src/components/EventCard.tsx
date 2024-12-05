@@ -20,9 +20,10 @@ import {
 
 interface EventCardProps {
   event: Event;
+  isActive: boolean
 }
 
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event, isActive }: EventCardProps) {
   const [reservationTimer, setReservationTimer] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -110,7 +111,7 @@ export default function EventCard({ event }: EventCardProps) {
           <p>Vagas disponíveis: {event.availableSlots}</p>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleReserve} disabled={event.availableSlots === 0}>
+          <Button onClick={handleReserve} disabled={event.availableSlots === 0 || !isActive}>
             Reservar
           </Button>
         </CardFooter>

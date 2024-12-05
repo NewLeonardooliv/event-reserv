@@ -5,7 +5,7 @@ import EventCard from "@/components/EventCard"
 import { Event } from "@/model/event"
 import { useSocket } from "@/hooks/useSocket"
 
-export const EventList = ({ initialEvents }: { initialEvents: Event[] }) => {
+export const EventList = ({ initialEvents, isActive }: { initialEvents: Event[], isActive: boolean }) => {
     const [eventsList, setEventsList] = useState<Event[]>(initialEvents)
     const socket = useSocket()
 
@@ -35,7 +35,7 @@ export const EventList = ({ initialEvents }: { initialEvents: Event[] }) => {
     return (
         <>
             {eventsList.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard isActive={isActive} key={event.id} event={event} />
             ))}
         </>
     )

@@ -9,11 +9,11 @@ import { User } from '@/lib/data';
 import { useSocket } from '@/hooks/useSocket';
 import { Zap } from 'lucide-react';
 
-export default function UsersList() {
+export default function UsersList({ isActive, setIsActive }: { isActive: boolean, setIsActive: (isActive: boolean) => void }) {
   const [users, setUsers] = useState<User[]>([]);
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
   const [userPosition, setUserPosition] = useState<number | null>(null);
-  const [isActive, setIsActive] = useState(false);
+  // const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const socket = useSocket();
 
@@ -104,16 +104,16 @@ export default function UsersList() {
             <p>Tempo restante: {timeLeft} segundos</p>
           </div>
         ) : userPosition ? (
-          <Button 
-            className="w-full mb-2" 
+          <Button
+            className="w-full mb-2"
             onClick={handleLeaveQueue}
             variant="destructive"
           >
             Sair da Fila (Posição: {userPosition})
           </Button>
         ) : (
-          <Button 
-            className="w-full mb-2" 
+          <Button
+            className="w-full mb-2"
             onClick={handleJoinQueue}
           >
             Entrar na Fila

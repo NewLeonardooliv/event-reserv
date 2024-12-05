@@ -95,6 +95,24 @@ io.on("connection", (socket) => {
     io.emit("updateActiveUsers", activeUsers);
     checkAndActivateNextUser();
   });
+
+  socket.on("patch-event", (data) => {
+    try {
+      console.log("Evento atualizado:", data);
+
+      io.emit("receive-event-att", {
+        ...data,
+        createdAt: new Date(),
+        createdBy: socket.id,
+      });
+    } catch (error) {
+      console.error("Erro ao processar evento:", error);
+      socket.emit("error", {
+        message: "Erro ao atualizar evento",
+        details: error.message,
+      });
+    }
+  });
 });
 
 app.get("/", (req, res) => {
