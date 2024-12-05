@@ -10,6 +10,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { Zap } from 'lucide-react';
 
 export default function UsersList({ isActive, setIsActive }: { isActive: boolean, setIsActive: (isActive: boolean) => void }) {
+  const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
   const [userPosition, setUserPosition] = useState<number | null>(null);
@@ -27,9 +28,15 @@ export default function UsersList({ isActive, setIsActive }: { isActive: boolean
         }
       });
 
+      const updateOnlineUsers = (updatedList: User[]) => {
+        setOnlineUsers(updatedList);
+      };
+
       socket.on('updateActiveUsers', (updatedActiveUsers: string[]) => {
         setActiveUsers(updatedActiveUsers);
       });
+
+      socket.on('updateOnlineUsers', updateOnlineUsers);
 
       socket.on('activateUser', ({ timeLimit }) => {
         setIsActive(true);
@@ -37,14 +44,16 @@ export default function UsersList({ isActive, setIsActive }: { isActive: boolean
       });
 
       socket.emit('getInitialData');
+      socket.emit('connectClient');
 
       return () => {
         socket.off('updateUsers');
         socket.off('updateActiveUsers');
         socket.off('activateUser');
+        socket.off('updateOnlineUsers', updateOnlineUsers);
       };
     }
-  }, [socket, activeUsers]);
+  }, [socket]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -76,7 +85,7 @@ export default function UsersList({ isActive, setIsActive }: { isActive: boolean
     <Card className="h-[calc(100vh-5rem)] w-full max-w-sm border-none flex flex-col">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">
-          Usuários Online <Badge variant="secondary" className="ml-2">{users.length}</Badge>
+          Usuários Online <Badge variant="secondary" className="ml-2">{onlineUsers.length}</Badge>
         </CardTitle>
       </CardHeader>
 

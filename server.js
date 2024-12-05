@@ -20,6 +20,7 @@ const io = new Server(server, {
 const PORT = 3002;
 
 let users = [];
+let onlineUsers = [];
 let activeUsers = [];
 const MAX_ACTIVE_USERS = 1;
 const INTERACTION_TIMEOUT = 30000; // 30 seconds
@@ -28,9 +29,9 @@ function moveToEndOfQueue(userId) {
   const userIndex = activeUsers.indexOf(userId);
   if (userIndex !== -1) {
     activeUsers.splice(userIndex, 1);
-    const user = users.find(u => u.id === userId);
+    const user = users.find((u) => u.id === userId);
     if (user) {
-      users = users.filter(u => u.id !== userId);
+      users = users.filter((u) => u.id !== userId);
       users.push(user);
     }
     checkAndActivateNextUser();
@@ -38,12 +39,17 @@ function moveToEndOfQueue(userId) {
 }
 
 function checkAndActivateNextUser() {
-  while (activeUsers.length < MAX_ACTIVE_USERS && users.length > activeUsers.length) {
-    const nextUserId = users.find(user => !activeUsers.includes(user.id))?.id;
+  while (
+    activeUsers.length < MAX_ACTIVE_USERS &&
+    users.length > activeUsers.length
+  ) {
+    const nextUserId = users.find((user) => !activeUsers.includes(user.id))?.id;
     if (nextUserId) {
       activeUsers.push(nextUserId);
-      io.to(nextUserId).emit('activateUser', { timeLimit: INTERACTION_TIMEOUT });
-      
+      io.to(nextUserId).emit("activateUser", {
+        timeLimit: INTERACTION_TIMEOUT,
+      });
+
       setTimeout(() => moveToEndOfQueue(nextUserId), INTERACTION_TIMEOUT);
     }
   }
@@ -57,12 +63,20 @@ io.on("connection", (socket) => {
   socket.on("getInitialData", () => {
     socket.emit("updateUsers", users);
     socket.emit("updateActiveUsers", activeUsers);
+    socket.emit("updateOnlineUsers", onlineUsers);
+  });
+
+  socket.on("connectClient", () => {
+    const newUser = { id: socket.id, name: `User ${socket.id}` };
+    onlineUsers.push(newUser);
+
+    io.emit("updateOnlineUsers", onlineUsers);
   });
 
   socket.on("joinQueue", (userData) => {
-    const newUser = { 
-      id: socket.id, 
-      name: userData.name || `User ${socket.id.substr(0, 4)}` 
+    const newUser = {
+      id: socket.id,
+      name: userData.name || `User ${socket.id.substr(0, 4)}`,
     };
     users.push(newUser);
     io.emit("updateUsers", users);
@@ -70,7 +84,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("leaveQueue", () => {
-    users = users.filter(user => user.id !== socket.id);
+    users = users.filter((user) => user.id !== socket.id);
     const activeIndex = activeUsers.indexOf(socket.id);
     if (activeIndex !== -1) {
       activeUsers.splice(activeIndex, 1);
@@ -86,11 +100,15 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("Cliente desconectado:", socket.id);
-    users = users.filter(user => user.id !== socket.id);
+    users = users.filter((user) => user.id !== socket.id);
     const activeIndex = activeUsers.indexOf(socket.id);
     if (activeIndex !== -1) {
       activeUsers.splice(activeIndex, 1);
     }
+
+    onlineUsers = onlineUsers.filter((user) => user.id !== socket.id);
+
+    io.emit("updateOnlineUsers", onlineUsers);
     io.emit("updateUsers", users);
     io.emit("updateActiveUsers", activeUsers);
     checkAndActivateNextUser();
@@ -131,7 +149,6 @@ io.on("connection", (socket) => {
       });
     }
   });
-
 });
 
 app.get("/", (req, res) => {
