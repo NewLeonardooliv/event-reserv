@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
@@ -25,13 +25,6 @@ export default function CriarNovoEvento() {
   const router = useRouter()
   const socket = useSocket()
 
-  useEffect(() => {
-    if (socket) {
-      socket.on('receive-event', (message: string) => {
-        console.log('Recebido do servidor:', message)
-      })
-    }
-  }, [socket])
 
   const onSubmit = async (data: EventFormData) => {
     setIsLoading(true)

@@ -3,7 +3,6 @@ import { Event } from "@/model/event";
 import { delay } from "./utils";
 import { USERS } from "@/constants/users.constants";
 
-
 export interface User {
   id: string;
   name: string;
@@ -16,9 +15,7 @@ const onlineUsers: User[] = [
 ];
 
 
-export async function getEvents(): Promise<Event[]> {
-  await delay(500);
-
+export function getEvents(): Event[] {
   return EVENTS;
 }
 

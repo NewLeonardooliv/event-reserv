@@ -4,9 +4,22 @@ import { useEffect, useState } from "react"
 import EventCard from "@/components/EventCard"
 import { Event } from "@/model/event"
 import { useSocket } from "@/hooks/useSocket"
+import { getEvents } from "@/http/getEvents"
 
-export const EventList = ({ initialEvents, isActive }: { initialEvents: Event[], isActive: boolean }) => {
-    const [eventsList, setEventsList] = useState<Event[]>(initialEvents)
+export const EventList = ({ isActive }: { isActive: boolean }) => {
+    useEffect(() => {
+      const fetchData = async () => {
+        const eventsGetter = await getEvents()
+        console.log(eventsGetter, `aaa`);
+        
+  
+        setEventsList(eventsGetter)
+      }
+  
+      fetchData()
+    }, [])
+    
+    const [eventsList, setEventsList] = useState<Event[]>([])
     const socket = useSocket()
 
     useEffect(() => {

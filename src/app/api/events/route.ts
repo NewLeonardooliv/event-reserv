@@ -8,7 +8,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const event: Event = await request.json();
-
+  
   EVENTS.push(event);
 
   return NextResponse.json(event, { status: 201 });
