@@ -113,6 +113,25 @@ io.on("connection", (socket) => {
       });
     }
   });
+
+  socket.on("create-event", (data) => {
+    try {
+      console.log("Novo evento criado:", data);
+
+      io.emit("receive-event", {
+        ...data,
+        createdAt: new Date(),
+        createdBy: socket.id,
+      });
+    } catch (error) {
+      console.error("Erro ao processar evento:", error);
+      socket.emit("error", {
+        message: "Erro ao criar evento",
+        details: error.message,
+      });
+    }
+  });
+
 });
 
 app.get("/", (req, res) => {
