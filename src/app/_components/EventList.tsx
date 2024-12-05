@@ -10,8 +10,6 @@ export const EventList = ({ isActive }: { isActive: boolean }) => {
     useEffect(() => {
       const fetchData = async () => {
         const eventsGetter = await getEvents()
-        console.log(eventsGetter, `aaa`);
-        
   
         setEventsList(eventsGetter)
       }

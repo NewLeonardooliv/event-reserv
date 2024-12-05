@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { updateSettings, getSettings } from '@/lib/actions'
+import { useSocket } from '@/hooks/useSocket'
 
 interface SystemSettings {
     maxUsers: number;
@@ -17,13 +18,14 @@ interface SystemSettings {
 
 export default function ConfiguracoesDoSistema() {
     const [settings, setSettings] = useState<SystemSettings>({
-        maxUsers: 10,
-        choiceTime: 120,
-    })
+        maxUsers: 0,
+        choiceTime: 0,
+    });
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isSaved, setIsSaved] = useState(false)
     const router = useRouter()
+    const socket = useSocket()
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -47,6 +49,11 @@ export default function ConfiguracoesDoSistema() {
 
         try {
             await updateSettings(settings)
+
+            if (socket) {
+                socket.emit('setConfig', settings)
+            }
+
             setIsSaved(true)
             setTimeout(() => setIsSaved(false), 3000)
         } catch (error) {
@@ -61,7 +68,7 @@ export default function ConfiguracoesDoSistema() {
         const { name, value, type } = e.target
         setSettings(prev => ({
             ...prev,
-            [name]: type === 'number' ? parseInt(value, 10) : value
+            [name]: type === 'number' ? (value ? parseInt(value, 10) : 0) : value
         }))
     }
 
@@ -72,8 +79,8 @@ export default function ConfiguracoesDoSistema() {
                     <CardTitle className="text-2xl font-bold">Configurações do Sistema</CardTitle>
                     <CardDescription>Ajuste as configurações globais do sistema de reservas.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <CardContent>
                         <div className="space-y-2">
                             <Label htmlFor="maxUsers">Máximo de Usuários Simultâneos</Label>
                             <Input
@@ -95,7 +102,7 @@ export default function ConfiguracoesDoSistema() {
                                 value={settings.choiceTime}
                                 onChange={handleInputChange}
                                 required
-                                min="30"
+                                min="5"
                             />
                         </div>
                         {error && (
@@ -112,14 +119,14 @@ export default function ConfiguracoesDoSistema() {
                                 <AlertDescription>As configurações foram salvas com sucesso.</AlertDescription>
                             </Alert>
                         )}
-                    </form>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => router.push('/admin')}>Voltar</Button>
-                    <Button type="submit" disabled={isLoading} onClick={() => handleSubmit}>
-                        {isLoading ? 'Salvando...' : 'Salvar Configurações'}
-                    </Button>
-                </CardFooter>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                        <Button variant="outline" onClick={() => router.push('/admin')}>Voltar</Button>
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading ? 'Salvando...' : 'Salvar Configurações'}
+                        </Button>
+                    </CardFooter>
+                </form>
             </Card>
         </div>
     )

@@ -18,8 +18,8 @@ const io = new Server(server, {
 });
 
 const PORT = 3002;
-const MAX_ACTIVE_USERS = 1;
-const INTERACTION_TIMEOUT = 30000; // 30 seconds
+let MAX_ACTIVE_USERS = 1;
+let INTERACTION_TIMEOUT = 30000; // 30 seconds
 
 let users = [];
 let onlineUsers = [];
@@ -94,6 +94,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("finishInteraction", () => moveToEndOfQueue(socket.id));
+
+  socket.on("setConfig", (data) => {
+    console.log(data);
+    MAX_ACTIVE_USERS = data.maxUsers;
+    INTERACTION_TIMEOUT = data.choiceTime * 1000;
+  });
 
   socket.on("disconnect", () => {
     console.log("Cliente desconectado:", socket.id);
