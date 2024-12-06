@@ -20,10 +20,11 @@ import {
 
 interface EventCardProps {
   event: Event;
-  isActive: boolean
+  isActive: boolean,
+  setDialogIsOpen: (value: boolean) => void
 }
 
-export default function EventCard({ event, isActive }: EventCardProps) {
+export default function EventCard({ event, isActive, setDialogIsOpen }: EventCardProps) {
   const [reservationTimer, setReservationTimer] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function EventCard({ event, isActive }: EventCardProps) {
         if (remaining <= 0) {
           setReservationTimer(null);
           setTimeLeft(null);
-          handleCancelReservation(); 
+          handleCancelReservation();
         }
       }, 1000);
     }
@@ -48,12 +49,22 @@ export default function EventCard({ event, isActive }: EventCardProps) {
     };
   }, [reservationTimer]);
 
+
+  useEffect(() => {
+    if (isActive) {
+      acquireSemaphore();
+      return;
+    }
+
+    releaseSemaphore();
+  }, [isActive])
+
   const handleReserve = async () => {
     const expirationTime = Date.now() + 120000; // 2 minutes from now
     setReservationTimer(expirationTime);
 
     try {
-      await acquireSemaphore();
+      // await acquireSemaphore();
       await patchEvent(event.id, -1);
 
       if (socket) {
@@ -64,6 +75,8 @@ export default function EventCard({ event, isActive }: EventCardProps) {
       }
 
       setIsDialogOpen(true);
+      setDialogIsOpen(true);
+      
     } catch (error) {
       console.error('Erro ao reservar vaga temporária:', error);
       setReservationTimer(null);
@@ -97,7 +110,7 @@ export default function EventCard({ event, isActive }: EventCardProps) {
   };
 
   const handleRelease = async () => {
-    await releaseSemaphore();
+    // await releaseSemaphore();
     setReservationTimer(null);
   };
 

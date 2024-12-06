@@ -9,7 +9,7 @@ import { User } from '@/lib/data';
 import { useSocket } from '@/hooks/useSocket';
 import { Zap } from 'lucide-react';
 
-export default function UsersList({ isActive, setIsActive }: { isActive: boolean, setIsActive: (isActive: boolean) => void }) {
+export default function UsersList({ isActive, setIsActive, dialogIsOpen }: { isActive: boolean, setIsActive: (isActive: boolean) => void, dialogIsOpen: boolean }) {
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
@@ -61,7 +61,9 @@ export default function UsersList({ isActive, setIsActive }: { isActive: boolean
       timer = setInterval(() => {
         setTimeLeft(prev => prev !== null ? prev - 1 : null);
       }, 1000);
-    } else if (timeLeft === 0) {
+    }
+
+    if (timeLeft === 0 && !dialogIsOpen) {
       setIsActive(false);
       socket?.emit('finishInteraction');
     }

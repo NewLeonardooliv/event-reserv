@@ -3,6 +3,7 @@
 import { EVENTS } from "@/constants/events.constants";
 import { revalidatePath } from "next/cache";
 import { delay } from "./utils";
+import { currentSettings } from "@/constants/settings.constans";
 
 export async function reserveEvent(eventId: string): Promise<void> {
   console.log(`Reserva para o evento ${eventId} criada`);
@@ -14,15 +15,11 @@ interface EventData {
   slots: number;
 }
 
-interface SystemSettings {
+export interface SystemSettings {
   maxUsers: number;
   choiceTime: number;
 }
 
-const currentSettings: SystemSettings = {
-  maxUsers: 10,
-  choiceTime: 120,
-};
 
 export async function createEvent({ name, slots }: EventData): Promise<void> {
   await delay(500);

@@ -1,6 +1,7 @@
+import { currentSettings } from '@/constants/settings.constans';
 import { Semaphore } from 'async-mutex';
 
-const semaphore = new Semaphore(1);
+const semaphore = new Semaphore(currentSettings.maxUsers);
 
 export const acquireSemaphore = async () => {
   const release = await semaphore.acquire();
